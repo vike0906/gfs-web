@@ -13,7 +13,7 @@
   <a-menu mode="inline" :inlineCollapsed="collapsedSide" >
     <a-menu-item key="1">
       <router-link to='/home/system-user'>
-        <a-icon type="user" />
+        <a-icon type="team" />
         <span>用户管理</span>
       </router-link>
     </a-menu-item>

@@ -4,8 +4,7 @@
       <a-col :span="24" style="text-align: left;padding: .5rem;">
         <a-breadcrumb>
           <a-breadcrumb-item>首页</a-breadcrumb-item>
-          <a-breadcrumb-item>股票市场</a-breadcrumb-item>
-          <a-breadcrumb-item>A股汇总</a-breadcrumb-item>
+          <a-breadcrumb-item>资源管理</a-breadcrumb-item>
         </a-breadcrumb>
       </a-col>
     </a-row>

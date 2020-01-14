@@ -4,7 +4,6 @@
       <a-col :span="24" style="text-align: left;padding: .5rem;">
         <a-breadcrumb>
           <a-breadcrumb-item>首页</a-breadcrumb-item>
-          <a-breadcrumb-item>系统管理</a-breadcrumb-item>
           <a-breadcrumb-item>用户管理</a-breadcrumb-item>
         </a-breadcrumb>
       </a-col>
