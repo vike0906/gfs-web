@@ -86,7 +86,7 @@ export default {
   },
   created(){
     this.init();
-    this.welcome();
+    // this.welcome();
   },
   mounted() {
     let timer = false;

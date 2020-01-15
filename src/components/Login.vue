@@ -11,7 +11,7 @@
         <div class="login-content">
           <div style="display:inline">
             <a-avatar :size="25" src="../../../static/logo.png" style="vertical-align: middle;" />
-            <span style="font-size:1.5rem;vertical-align: middle;">通用文件服务</span>
+            <span style="font-size:1.5rem;vertical-align: middle;">通用文件服务平台</span>
             <!-- <span style="font-size:1.5rem;vertical-align: middle;">The General File Server</span> -->
           </div>
           <h1 style="margin-top: 1.5rem;text-align: center;font-size: 2rem;">欢迎登陆</h1>
@@ -77,11 +77,11 @@ export default {
   methods: {
     login: function() {
       const that = this;
-      let name = this.loginName;
+      let loginName = this.loginName;
       let password = this.password;
       let captcha = this.captcha;
       let serial = this.serial;
-      if (name.length == 0) {
+      if (loginName.length == 0) {
         this.$message.error("请输入登陆名");
         return;
       }
@@ -96,7 +96,7 @@ export default {
       this.loading = true;
       if(!this.captchaSwitch){
         //访问后台，获取登录信息
-        let params = { name: name, password: password };
+        let params = { loginName: loginName, password: password };
           api.login(params)
             .then(response => {
               this.loading = false;

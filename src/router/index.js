@@ -25,21 +25,12 @@ export default new Router({
         path:'',
         component:()=>import('@/components')
       },{
-        path:'stock-base',
-        component:()=>import('@/components/stock/StockBase')
+        path:'user',
+        component:()=>import('@/components/action/User')
       },{
-        path:'stock-focus',
-        component:()=>import('@/components/stock/StockFocus')
-      },{
-        path:'system-user',
-        component:()=>import('@/components/system/User')
-      },{
-        path:'system-role',
-        component:()=>import('@/components/system/Role')
-      },{
-        path:'system-action',
-        component:()=>import('@/components/system/Action')
-      },]
+        path:'resource',
+        component:()=>import('@/components/action/Resource')
+      }]
     },
     {
       path: '/logout',

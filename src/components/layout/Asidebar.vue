@@ -12,13 +12,13 @@
   </a-menu>-->
   <a-menu mode="inline" :inlineCollapsed="collapsedSide" >
     <a-menu-item key="1">
-      <router-link to='/home/system-user'>
+      <router-link to='/home/user'>
         <a-icon type="team" />
         <span>用户管理</span>
       </router-link>
     </a-menu-item>
     <a-menu-item key="2">
-      <router-link to='/home/stock-base'>
+      <router-link to='/home/resource'>
         <a-icon type="hdd" />
       <span>资源管理</span>
       </router-link>
@@ -27,7 +27,6 @@
 </template>
 
 <script>
-import * as api from "@/api/system";
 export default {
   data() {
     return {
@@ -39,31 +38,6 @@ export default {
       return this.$store.getters.getAsidebarCollapse;
     }
   },
-  methods: {
-    getMenu() {
-      let menu = JSON.parse(sessionStorage.getItem("menu"));
-      if (menu) {
-        this.menu = menu;
-      } else {
-        api
-          .getMenu()
-          .then(response => {
-            if (response) {
-              if (response.code == 0) {
-                this.menu = response.content;
-                sessionStorage.setItem("menu", JSON.stringify(this.menu));
-              }
-            }
-          })
-          .catch(err => {
-            console.log(err);
-          });
-      }
-    }
-  },
-  mounted() {
-    this.getMenu();
-  }
 };
 </script>
 <style>

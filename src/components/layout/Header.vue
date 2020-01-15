@@ -16,9 +16,9 @@
       <a-col
         :xs="{span: 4, offset:0}"
         :sm="{span: 6, offset:0}"
-        :md="{span: 4, offset:8}"
-        :lg="{span: 3, offset:14}"
-        :xl="{span: 2, offset:17}"
+        :md="{span: 12, offset:0}"
+        :lg="{span: 10, offset:7}"
+        :xl="{span: 5, offset:14}"
       >
         <div class="head-info" @click="changeHeadMenu()">
           <a-avatar style="backgroundColor:#87d068" icon="user" />
@@ -115,7 +115,7 @@ export default {
   },
   computed: {
     userName: function() {
-      return JSON.parse(sessionStorage.getItem("user")).name;
+      return JSON.parse(sessionStorage.getItem("user")).Name;
     },
     collapsed: function() {
       let screenSize = this.$store.getters.getScreenSize;
@@ -199,6 +199,7 @@ export default {
       api
         .logout()
         .then(response => {
+          console.log(response);
           if (response.code == 0) {
             this.$message.success(response.message);
           } else {

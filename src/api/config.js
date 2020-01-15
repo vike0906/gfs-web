@@ -18,7 +18,7 @@ service.interceptors.request.use(
       let user = JSON.parse(sessionStorage.getItem('user'));
       if (user != null && typeof user != 'undefined') {
         // let each request carry token
-        config.headers['AuthToken'] = user.token;
+        config.headers['AuthToken'] = user.Token;
       }
       return config
     },
