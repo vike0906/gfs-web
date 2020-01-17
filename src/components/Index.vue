@@ -37,8 +37,8 @@ export default {
 .content {
   background-color: #f5f5f6;
   /* background-color: #fff; */
-  width: 100%;
-  height: 100%;
+  min-width: 100%;
+  min-height: 100%;
   padding: 10px;
 }
 .welcome {

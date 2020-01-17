@@ -15,7 +15,7 @@
           <a-table
             :columns="columns"
             :dataSource="data"
-            rowKey="id"
+            rowKey="ID"
             :pagination="pagination"
             :loading="loading"
             @change="handleTableChange"
@@ -26,15 +26,15 @@
               <a-row class="option" type="flex" justify="space-between" align="middle">
                 <a-col :span="4" style="text-align: left;">
                   <div v-if="screenSize<639">
-                    <a-button icon="user-add" shape="circle" @click="showAddUserModal"></a-button>
+                    <a-button icon="file-add" shape="circle" @click="showAddUserModal"></a-button>
                   </div>
                   <div v-else>
-                    <a-button icon="user-add" @click="showAddUserModal">新增</a-button>
+                    <a-button icon="file-add" @click="showUploadModel">添加</a-button>
                   </div>
                 </a-col>
                 <a-col :xs="20" :sm="18" :md="12" :lg="7" :xl="5" style="text-align: right;">
                   <a-input-search
-                    placeholder="用户姓名/登陆名"
+                    placeholder="索引/文件名"
                     style="width: 200px"
                     v-model="queryStr"
                     @search="onSearch"
@@ -42,114 +42,156 @@
                 </a-col>
               </a-row>
             </div>
+
+            <div slot="FileName" slot-scope="text">
+              <!-- <span class="text-truncate">{{text}}</span> -->
+              <a-tooltip placement="topLeft" :title="text" arrowPointAtCenter>
+                <span class="text-truncate">{{text}}</span>
+              </a-tooltip>
+            </div>
+            <div slot="Type" slot-scope="text">
+              <span v-if="text==1" style="color:#65bf65;">公开</span>
+              <span v-else style="color:#ef444d;">私密</span>
+              <!-- //#1c791c -->
+            </div>
+            <div slot="Size" slot-scope="text">
+              <span v-if="text/1024<=1">{{text}}B</span>
+              <span v-else-if="text/1024/1024<=1">{{(text/1024).toFixed(2)}}K</span>
+              <span v-else-if="text/1024/1024/1024<=1">{{(text/1024/1024).toFixed(2)}}M</span>
+              <span v-else-if="text/1024/1024/1024/1024<=1">{{(text/1024/1024/1024).toFixed(2)}}G</span>
+            </div>
+
+            <div slot="Resource" slot-scope="text">
+              <a-tooltip placement="topLeft" :title="text" arrowPointAtCenter>
+                <span class="text-truncate">{{text}}</span>
+              </a-tooltip>
+            </div>
+            <div slot="Status" slot-scope="text">
+              <span v-if="text==1" style="color:#65bf65;">已上传</span>
+              <span v-else style="color:#3ea23e;">已备份</span>
+              <!-- //#1c791c -->
+            </div>
+            <div slot="CreatedAt" slot-scope="text, record">
+              <span>{{record.CreatedAt|formatDateTime}}</span>
+            </div>
             <div slot="action" slot-scope="text, record" style="text-align: center">
-              <a-button icon="edit" @click="showEditUserModal(record)" size="small">编辑</a-button>
-              <a-button type="danger" icon="delete" @click="deleteUser(record.id)" size="small">删除</a-button>
-            </div>
-            <div slot="status" slot-scope="text">
-              <span v-if="text==1" style="color:green;">正常</span>
-              <span v-else style="color:red;">禁用</span>
-            </div>
-            <div slot="createTime" slot-scope="text, record">
-              <span>{{record.createTime|formatDateTime}}</span>
+              <a-button icon="download" @click="downloadResource(record)" size="small">下载</a-button>
+              <a-button
+                type="danger"
+                icon="delete"
+                @click="deleteResource(record.ID)"
+                size="small"
+              >删除</a-button>
             </div>
           </a-table>
         </a-col>
       </a-row>
-      <a-modal
-        :title="modalTitle"
-        :visible="visible"
-        @ok="saveUser"
-        :confirmLoading="confirmLoading"
-        @cancel="handleCancel"
-        cancelText="取消"
-        :okText="okText"
-        okType="primary"
-        :destroyOnClose="true"
-      >
-        <a-row>
-          <a-col
-            :xs="{span: 24, offset:0}"
-            :sm="{span: 24, offset:0}"
-            :md="{span: 24, offset:0}"
-            :lg="{span: 23, offset:1}"
-            :xl="{span: 22, offset:2}"
-          >
-            <a-form :form="form">
-              <div v-show="addInfo">
-                <p>
-                  <a-icon type="info-circle" />&nbsp;新增用户初始密码为
-                  <strong>123456</strong>，建议初次登录后立即更改
-                </p>
-                <br />
-              </div>
-
-              <a-form-item label="用户名称" :label-col="{ span: 5 }" :wrapper-col="{ span: 12 }">
-                <a-input
-                  v-decorator="['name', { rules: [{ required: true, message: '请输入用户名称' }] }]"
-                  type="text"
-                  placeholder="输入用户名称"
-                />
-              </a-form-item>
-              <a-form-item label="登陆名称" :label-col="{ span: 5 }" :wrapper-col="{ span: 12 }">
-                <a-input
-                  v-decorator="['loginName', { rules: [{ required: true, message: '请输入登陆名称' }] }]"
-                  type="text"
-                  placeholder="输入登陆名称"
-                  :disabled="isLN"
-                />
-              </a-form-item>
-              <a-form-item label="用户角色" :label-col="{ span: 5 }" :wrapper-col="{ span: 12 }">
-                <a-select
-                  v-decorator="[ 'roleId', { rules: [{ required: true, message: '请选择用户角色' }] }, ]"
-                  placeholder="选择用户角色"
-                > 
-                <a-select-option v-for="item in roleList" :key="item.id" :value="item.id+''" >{{item.name}}</a-select-option>
-                </a-select>
-              </a-form-item>
-              <a-form-item label="用户状态" :label-col="{ span: 5 }" :wrapper-col="{ span: 12 }">
-                <a-select
-                  v-decorator="[ 'status', { rules: [{ required: true, message: '请选择用户状态' }] }]"
-                  placeholder="选择用户状态"
-                >
-                  <a-select-option value='1'>正常</a-select-option>
-                  <a-select-option value='2'>禁用</a-select-option>
-                </a-select>
-              </a-form-item>
-            </a-form>
-          </a-col>
-        </a-row>
-      </a-modal>
+      <Upload :visible="visible"></Upload>
     </div>
   </div>
 </template>
 <script>
-import * as api from "@/api/user";
+import * as api from "@/api/resource";
 import { formatDateTime } from "@/utils/util";
-const columns = [
+import Upload from "@/components/component/Upload"
+const columnAdmin = [
   {
-    title: "用户名称",
-    dataIndex: "name"
+    title: "文件索引",
+    dataIndex: "FileKey",
+    scopedSlots: { customRender: "Resource" }
   },
   {
-    title: "登录名",
-    dataIndex: "loginName"
+    title: "文件名称",
+    dataIndex: "FileName",
+    scopedSlots: { customRender: "FileName" }
   },
   {
-    title: "用户角色",
-    dataIndex: "role.name"
+    title: "所属用户",
+    dataIndex: "UserName"
+  },
+  {
+    title: "大小",
+    dataIndex: "Size",
+    width: "5%",
+    sorter: true,
+    scopedSlots: { customRender: "Size" }
+  },
+  {
+    title: "权限",
+    dataIndex: "Type",
+    scopedSlots: { customRender: "Type" }
+  },
+  {
+    title: "资源路径",
+    dataIndex: "ResourcePath",
+    scopedSlots: { customRender: "Resource" }
+  },
+  {
+    title: "资源名称",
+    dataIndex: "ResourceName",
+    scopedSlots: { customRender: "Resource" }
+  },
+  {
+    title: "MD5",
+    dataIndex: "HashMd5",
+    scopedSlots: { customRender: "Resource" }
   },
   {
     title: "状态",
-    dataIndex: "status",
-    scopedSlots: { customRender: "status" }
+    dataIndex: "Status",
+    scopedSlots: { customRender: "Status" }
   },
   {
-    title: "创建时间",
+    title: "上传时间",
     width: "15%",
-    dataIndex: "createTime",
+    dataIndex: "CreatedAt",
     sorter: true,
-    scopedSlots: { customRender: "createTime" }
+    scopedSlots: { customRender: "CreatedAt" }
+  },
+  {
+    title: "操作",
+    width: "15%",
+    dataIndex: "action",
+    scopedSlots: { customRender: "action" }
+  }
+];
+const columnUser = [
+  {
+    title: "文件索引",
+    dataIndex: "FileKey"
+  },
+  {
+    title: "文件名称",
+    dataIndex: "FileName",
+    scopedSlots: { customRender: "FileName" }
+  },
+  {
+    title: "大小",
+    dataIndex: "Size",
+    width: "5%",
+    sorter: true,
+    scopedSlots: { customRender: "Size" }
+  },
+  {
+    title: "权限",
+    dataIndex: "Type",
+    scopedSlots: { customRender: "Type" }
+  },
+  {
+    title: "MD5",
+    dataIndex: "HashMd5"
+  },
+  {
+    title: "状态",
+    dataIndex: "Status",
+    scopedSlots: { customRender: "Status" }
+  },
+  {
+    title: "上传时间",
+    width: "15%",
+    dataIndex: "CreatedAt",
+    sorter: true,
+    scopedSlots: { customRender: "CreatedAt" }
   },
   {
     title: "操作",
@@ -159,33 +201,29 @@ const columns = [
   }
 ];
 export default {
+    components: {
+      Upload
+    },
   data() {
     return {
       data: [],
       pagination: {
-        total:0,
-        defaultPageSize: 10,
+        total: 0,
+        defaultPageSize: 15,
         showTotal: total => `共 ${total} 条数据`
       },
       loading: false,
-      columns,
+      columns: columnUser,
       queryStr: "",
-      modalTitle: "",
-      okText: "",
+
       visible: false,
-      confirmLoading: false,
-      roleList:[],
-      editId:-1,
-      addInfo: false,
-      isLN:false,
-      form: this.$form.createForm(this, { name: "saveUser" })
     };
   },
   computed: {
     scroll: function() {
       let screenSize = this.$store.getters.getScreenSize;
-      if (screenSize <= 1000) {
-        return { x: 1000, y: 280 };
+      if (screenSize <= 1800) {
+        return { x: 1000, y: 0 };
       } else {
         return { x: 0, y: 0 };
       }
@@ -195,63 +233,22 @@ export default {
     }
   },
   methods: {
-    saveUser() {
-      this.confirmLoading = true;
-      this.form.validateFields((err, values) => {
-        if (!err) {
-          let params = {
-            id: this.editId,
-            name: values.name,
-            loginName: values.loginName,
-            roleId: values.roleId,
-            status: values.status
-          };
-          api.saveUser(params).then(response => {
-            this.confirmLoading = false;
-              if (response) {
-                if (response.code == 0) {
-                  this.visible = false;
-                  this.$message.success(response.message);
-                  this.getUsers();
-                }
-              }
-            })
-            .catch(err => {
-              console.log(err);
-              this.confirmLoading = false;
-            });
-        }else{
-          this.confirmLoading = false;
-        }
-      });
-      
-    },
-    showAddUserModal() {
-      this.getRoleList();
-      this.isLN=false;
-      this.editId=-1;
-      this.form.getFieldDecorator('roleId', {initialValue:'2'});
-      this.form.getFieldDecorator('status', {initialValue:'1'});
-      this.modalTitle = "新增用户";
-      this.okText = "确认添加";
-      this.visible = true;
-      this.addInfo = true;
-    },
-    showEditUserModal(record) {
-      this.getRoleList();
-      this.isLN=true;
-      this.editId=record.id;
-      this.form.getFieldDecorator('name', {initialValue:record.name});
-      this.form.getFieldDecorator('loginName', {initialValue:record.loginName});
-      this.form.getFieldDecorator('roleId', {initialValue:record.role.id+''});
-      this.form.getFieldDecorator('status', {initialValue:record.status+''});
-      this.modalTitle = "编辑用户";
-      this.okText = "确认修改";
-      this.visible = true;
-      this.addInfo = false;
-    },
     handleCancel(e) {
       this.visible = false;
+    },
+    showUploadModel() {
+      this.visible = true;
+    },
+    downloadResource(record) {
+      let token = "";
+      if (record.Type == 2) {
+        let user = JSON.parse(sessionStorage.getItem("user"));
+        token = "?token=" + user.Token;
+      }
+      let root = this.$API_ROOT.replace("manager", "download/");
+      let a = document.createElement("a");
+      a.href = root + record.FileKey + token;
+      a.click();
     },
     handleTableChange: function(pagination, filters, sorter) {
       let queryStr = this.queryStr ? this.queryStr : null;
@@ -266,55 +263,70 @@ export default {
         pageNo: pageNo,
         limit: limit
       };
-      this.getUsers(params);
+      this.getResource(params);
     },
     onSearch() {
       let queryStr = this.queryStr ? this.queryStr : null;
       let params = { queryStr: queryStr, limit: 15 };
-      this.getUsers(params);
+      this.getResource(params);
     },
-    getUsers(params) {
+    getResource(params) {
       this.loading = true;
-      api.gainUsers(params).then(response => {
+      api
+        .gainResource(params)
+        .then(response => {
           if (response) {
             if (response.code == 0) {
-              this.data = response.content.content;
-              this.pagination.total = response.content.totalElements;
+              this.data = response.content.Data;
+              this.pagination.total = response.content.Total;
             }
           }
           this.loading = false;
-        }).catch(err => {
+        })
+        .catch(err => {
           this.loading = false;
           console.log(err);
         });
     },
-    deleteUser: function(id) {
+    deleteResource: function(id) {
       let that = this;
       this.$confirm({
-          title: '确认删除该用户?',
-          content: '删除后该用户将无法继续登录平台',
-          okText: '删除',
-          okType: 'danger',
-          cancelText: '取消',
-          onOk() {
-            let params = {id:id}
-            api.deleteUser(params).then(response=>{
-              if(response){
-                if(response.code==0){
+        title: "确认删除该文件?",
+        content: "删除后不可恢复",
+        okText: "删除",
+        okType: "danger",
+        cancelText: "取消",
+        onOk() {
+          let params = { id: id };
+          api
+            .deleteResource(params)
+            .then(response => {
+              if (response) {
+                if (response.code == 0) {
                   that.$message.success(response.message);
-                  that.getUsers();
+                  that.getResource();
                 }
               }
-            }).catch(err=>{
+            })
+            .catch(err => {
               console.log(err);
             });
-            return new Promise((resolve, reject) => { resolve(true);});
-          },
-        });
+          return new Promise((resolve, reject) => {
+            resolve(true);
+          });
+        }
+      });
+    },
+    getColumns() {
+      let user = JSON.parse(sessionStorage.getItem("user"));
+      if (user != null && typeof user != "undefined" && user.Role == 1) {
+        this.columns = columnAdmin;
+      }
     }
   },
   mounted() {
-    this.getUsers();
+    this.getColumns();
+    this.getResource();
   },
   filters: {
     formatDateTime: function(time) {
@@ -331,12 +343,19 @@ export default {
 <style scoped>
 .content {
   background-color: #fff;
-  width: 100%;
-  height: 100%;
   padding: 5px;
+  min-height: 100%;
+  min-width: 100%;
 }
 .template {
   width: 100%;
   height: 100%;
+}
+.text-truncate {
+  width: 10.5rem;
+  float: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

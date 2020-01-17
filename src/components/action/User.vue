@@ -29,7 +29,7 @@
                     <a-button icon="user-add" shape="circle" @click="showAddUserModal"></a-button>
                   </div>
                   <div v-else>
-                    <a-button icon="user-add" @click="showAddUserModal">新增</a-button>
+                    <a-button icon="user-add" @click="showAddUserModal">添加</a-button>
                   </div>
                 </a-col>
                 <a-col :xs="20" :sm="18" :md="12" :lg="7" :xl="5" style="text-align: right;">
@@ -44,7 +44,7 @@
             </div>
             <div slot="action" slot-scope="text, record" style="text-align: center">
               <a-button icon="edit" @click="showEditUserModal(record)" size="small">编辑</a-button>
-              <a-button type="danger" icon="delete" @click="deleteUser(record.id)" size="small">删除</a-button>
+              <a-button type="danger" icon="delete" @click="deleteUser(record.ID)" size="small">删除</a-button>
             </div>
             <div slot="role" slot-scope="text">
               <span v-if="text==1" >管理员</span>
@@ -108,11 +108,8 @@
                   v-decorator="[ 'roleId', { rules: [{ required: true, message: '请选择用户角色' }] }, ]"
                   placeholder="选择用户角色"
                 >
-                  <a-select-option
-                    v-for="item in roleList"
-                    :key="item.id"
-                    :value="item.id+''"
-                  >{{item.name}}</a-select-option>
+                  <a-select-option value="1">管理员</a-select-option>
+                  <a-select-option value="2">普通用户</a-select-option>
                 </a-select>
               </a-form-item>
               <a-form-item label="用户状态" :label-col="{ span: 5 }" :wrapper-col="{ span: 12 }">
@@ -149,13 +146,23 @@ const columns = [
     scopedSlots: { customRender: "role" }
   },
   {
+    title: "AppKey",
+    width: "10%",
+    dataIndex: "AppKey"
+  },
+  {
+    title: "AppSecret",
+    width: "10%",
+    dataIndex: "AppSecret"
+  },
+  {
     title: "状态",
     dataIndex: "Status",
     scopedSlots: { customRender: "status" }
   },
   {
     title: "创建时间",
-    width: "15%",
+    width: "10%",
     dataIndex: "CreatedAt",
     sorter: true,
     scopedSlots: { customRender: "CreatedAt" }
@@ -173,7 +180,7 @@ export default {
       data: [],
       pagination: {
         total: 0,
-        defaultPageSize: 10,
+        defaultPageSize: 15,
         showTotal: total => `共 ${total} 条数据`
       },
       loading: false,
@@ -183,7 +190,6 @@ export default {
       okText: "",
       visible: false,
       confirmLoading: false,
-      roleList: [],
       editId: -1,
       addInfo: false,
       isLN: false,
@@ -193,7 +199,7 @@ export default {
   computed: {
     scroll: function() {
       let screenSize = this.$store.getters.getScreenSize;
-      if (screenSize <= 1000) {
+      if (screenSize <= 1500) {
         return { x: 1000, y: 280 };
       } else {
         return { x: 0, y: 0 };
@@ -237,7 +243,7 @@ export default {
       });
     },
     showAddUserModal() {
-      this.getRoleList();
+      // this.getRoleList();
       this.isLN = false;
       this.editId = -1;
       this.form.getFieldDecorator("roleId", { initialValue: "2" });
@@ -248,18 +254,18 @@ export default {
       this.addInfo = true;
     },
     showEditUserModal(record) {
-      this.getRoleList();
+      // this.getRoleList();
       this.isLN = true;
-      this.editId = record.id;
-      this.form.getFieldDecorator("name", { initialValue: record.name });
+      this.editId = record.ID;
+      this.form.getFieldDecorator("name", { initialValue: record.Name });
       this.form.getFieldDecorator("loginName", {
-        initialValue: record.loginName
+        initialValue: record.LoginName
       });
       this.form.getFieldDecorator("roleId", {
-        initialValue: record.role.id + ""
+        initialValue: record.Role + ""
       });
       this.form.getFieldDecorator("status", {
-        initialValue: record.status + ""
+        initialValue: record.Status + ""
       });
       this.modalTitle = "编辑用户";
       this.okText = "确认修改";
@@ -291,13 +297,12 @@ export default {
     },
     getUsers(params) {
       this.loading = true;
-      api
-        .gainUsers(params)
+      api.gainUsers(params)
         .then(response => {
           if (response) {
             if (response.code == 0) {
-              this.data = response.content;
-              // this.pagination.total = response.content.totalElements;
+              this.data = response.content.Data;
+              this.pagination.total = response.content.Total;
             }
           }
           this.loading = false;
@@ -355,9 +360,9 @@ export default {
 <style scoped>
 .content {
   background-color: #fff;
-  width: 100%;
-  height: 100%;
   padding: 5px;
+  min-height: 100%;
+  min-width: 100%;
 }
 .template {
   width: 100%;

@@ -17,10 +17,10 @@
         <div class="content-mask" v-if="contentMaskShow" @click="maskClose()"></div>
         <a-layout style="height: 100%;">
           <a-layout-content class="wrapper"><router-view/></a-layout-content>
-          <a-layout-footer>
+          <a-layout-footer id="fix-footer">
             <p style="text-align: center">
-              create by
-              <a href="#" class="text-dark">vike0906</a> © 2019
+              Create By
+              <a href="#" class="text-dark">SXZQ</a> © 2020
             </p>
           </a-layout-footer>
         </a-layout>
@@ -86,6 +86,7 @@ export default {
   },
   created(){
     this.init();
+    
     // this.welcome();
   },
   mounted() {
@@ -137,6 +138,13 @@ export default {
   left: 0;
   
 }
+#fix-footer{
+  position:fixed;
+  bottom:0px;
+  left: 200px;
+  right: 0px;
+  z-index:2;
+}
 #home .ant-layout-content {
   background-color: #f5f5f6;
   color: #333;
@@ -151,7 +159,14 @@ export default {
   padding: 0.3rem 0.5rem;
 }
 #home .wrapper {
+  position:fixed;
+  bottom:2rem;
+  top: 3.6rem;
+  left: 200px;
+  right: 0px;
   padding: 10px 20px;
+  overflow-x: hidden;
+  overflow-y: scroll;
 }
 @media only screen and (max-width:639px){
   #home .ant-layout-sider{
