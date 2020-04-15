@@ -81,12 +81,12 @@ const server = "http://localhost:9090";
 const uploadToken = "uploadToken"//获取token
 
 //分片上传
-const isInit = false;
-const bigFileUploadSwitch = true;//分片上传开关
 const chunkSize = 2097152; // 分块尺寸2MB
-const chunkCount = 0;//分块数量，最大支持65535
-const currentChunkIndex = 0;//当前块
-const existedChunkArray = new Array();//已存在块
+let chunkCount = 0;//分块数量，最大支持65535
+let currentChunkIndex = 0;//当前块
+let existedChunkArray = new Array();//已存在块
+let isInit = false;
+let bigFileUploadSwitch = true;//分片上传开关
 export default {
     name:"Uplaod",
     props: ["visible"],
@@ -151,7 +151,129 @@ export default {
         }
       }else{
         //分片上传
+        //初始化
+        let fileHash = await this.fileMd5(this.file);//计算hash
+        chunkCount = Math.ceil(this.file.size / chunkSize);
+         let initResponse = await this.uploadInit(server, uploadToken, fileHash, this.file.name, chunkCount);
+          if (initResponse.code != 0) {
+               console.log(response);
+          this.progressVisible = false;
+           this.progressActive = "normal";
+          this.notification("上传失败","文件上传失败，请稍后重试",false);
+              return
+          } else if (initResponse.content.isExist == 1) {
+              this.progress = 100;
+           this.progressVisible = false;
+           this.progressActive = "normal";
+           this.notification("上传成功","大文件秒传",true);
+           this.$parent.getResource();
+              return
+          } else {
+              existedChunkArray = initResponse.content.chunkInfoArray;
+          }
+          isInit = true;
+        //上传分片
+        for (; currentChunkIndex < chunkCount;) {
+            if(bigFileUploadSwitch==false){
+                // resolve(2);
+                console.log("已暂停");
+                return
+            }
+            let startIndex = currentChunkIndex * chunkSize;
+            let endIndex = ((startIndex + chunkSize) >= this.file.size) ? this.file.size : startIndex + chunkSize;
+            let chunkBinary = this.file.slice(startIndex, endIndex);
+            let chunkHash = await this.fileMd5(chunkBinary);
+            // message(chunkHash);
+            console.log(chunkHash);
+            if (existedChunkArray.indexOf(chunkHash) < 0) {
+                let chunkResponse = await this.uploadChunk(server, uploadToken, fileHash, chunkHash, currentChunkIndex, startIndex, endIndex, chunkBinary);
+                console.log(chunkResponse);
+                if (chunkResponse.code != 0) {
+                    // resolve("块文件上传失败");
+                    console.log("块文件上传失败");
+                    return
+                } else if (chunkResponse.content.chunkHash != chunkHash) {
+                    // resolve("块文件回传hash错误，上传失败");
+                    console.log("块文件上传失败");
+                    return
+                }
+            } else {
+              console.log(chunkHash + "文件已存在");
+                // message(chunkHash + "文件已存在");
+            }
+            currentChunkIndex++;
+            this.progress = Math.round(currentChunkIndex / chunkCount * 99);
+            
+            // processUpdate(p);
+        }
+        //合并文件
+        let mergeResponse = await uploadMerge(server, uploadToken, fileHash)
+        if(bigFileUploadSwitch==false){
+            resolve("上传取消");
+            return
+        }
+        if (mergeResponse.code == 0) {
+            this.progress = 100;
+        } else {
+            resolve("文件合并失败");
+        }
       }
+    },
+    //大文件初始化
+    async uploadInit(server, uploadToken, fileHash, fileName, chunkCount) {
+        return new Promise(async resolve => {
+            let form = new FormData(); // FormData
+            form.append("uploadToken", uploadToken);
+            form.append("fileName", fileName);
+            form.append("fileHash", fileHash);
+            form.append("chunkCount", chunkCount);
+            Axios.post(server + "/init", form).then(response=>{
+              console.log(response);
+              resolve(response.data);
+            }).catch(err=>{
+              console.log(err);
+              resolve("上传失败！")
+            });
+        });
+    },
+    //上传文件块
+    async uploadChunk(server, uploadToken, fileHash, chunkHash, chunkIndex, chunkStart, chunkEnd, chunkBinary) {
+        return new Promise(async resolve => {
+            let form = new FormData(); // FormData
+            form.append("uploadToken", uploadToken);
+            form.append("fileHash", fileHash);
+            form.append("chunkHash", chunkHash);
+            form.append("chunkIndex", chunkIndex);
+            form.append("chunkStart", chunkStart);
+            form.append("chunkEnd", chunkEnd);
+            form.append("chunkBinary", chunkBinary);
+
+            Axios.post(server + "/chunk", form).then(response=>{
+              console.log(response);
+              resolve(response.data);
+            }).catch(err=>{
+              console.log(err);
+              resolve("上传失败！")
+            });
+            
+        });
+    },
+    //请求合并
+    async uploadMerge(server, uploadToken, fileHash) {
+        return new Promise(async resolve => {
+            let form = new FormData(); // FormData
+            form.append("uploadToken", uploadToken);
+            form.append("fileHash", fileHash);
+            
+            Axios.post(server + "/merge", form).then(response=>{
+              console.log(response);
+              resolve(response.data);
+            }).catch(err=>{
+              console.log(err);
+              resolve("上传失败！")
+            });
+            
+        });
     },
     async uploadDirect(uploadToken,file){
       return new Promise(async resolve=>{
@@ -166,11 +288,10 @@ export default {
           headers: { "Content-Type": "multipart/form-data" },
           //添加上传进度监听事件
           onUploadProgress: e => {
-            this.progress =parseInt((e.loaded / e.total * 99).toFixed(2));
+            this.progress = parseInt((e.loaded / e.total * 99).toFixed(2));
           }
         };
         Axios.post(server+'/upload', form, config).then(response=>{
-          console.log(response);
           let data = response.data;
           if (data.code == 0 && data.content.hash == fileHash) {
             resolve(0);
